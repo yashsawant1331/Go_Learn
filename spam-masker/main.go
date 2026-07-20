@@ -1,13 +1,3 @@
-/*
-✅ #1- Get and check the input
-✅ #2- Create a byte buffer and use it as the output
-✅ #3- Write input to the buffer as it is and print it
-✅ #4- Detect the link
-#5- Mask the link
-#6- Stop masking when whitespace is detected
-#7- Put a http:// prefix in front of the masked link
-*/
-
 package main
 
 import (
@@ -33,15 +23,34 @@ func main() {
 		buf  = make([]byte, 0, size)
 	)
 
-	for i := 0; i < size; i++ {
-		buf = append(buf, text[i])
+	masking := false
 
-		// slice the input and look for the link pattern
-		// do not slice it when it goes beyond the input text's capacity
-		if len(text[i:]) >= nlink && text[i:i+nlink] == link {
+	for i := 0; i < size; i++ {
+
+		// Detect the beginning of a link
+		if !masking && len(text[i:]) >= nlink && text[i:i+nlink] == link {
+			masking = true
+
+			// Keep the http:// prefix
+			buf = append(buf, link...)
+
+			// Skip the characters of "http://"
+			i += nlink - 1
+			continue
+		}
+
+		if masking {
+			// Stop masking when whitespace is found
+			if text[i] == ' ' || text[i] == '\n' || text[i] == '\t' {
+				masking = false
+				buf = append(buf, text[i])
+			} else {
+				buf = append(buf, '*')
+			}
+		} else {
+			buf = append(buf, text[i])
 		}
 	}
 
-	// print out the buffer as text (string)
 	fmt.Println(string(buf))
 }
